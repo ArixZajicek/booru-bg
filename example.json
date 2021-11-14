@@ -1,0 +1,28 @@
+{
+	"sets": [
+		{
+			"type": "search",
+			"downloadDir": "cool nintendo wallpapers",
+			"url": "https://example.com",
+			"search": ["solo", "nintendo"],
+			"exclude": ["pokemon"],
+			"minsize": {"width": 1280, "height": 720},
+			"ratio": "16:9",
+			"minscore": 100,
+			"excludeFileTypes": ["swf", "webm", "gif"]
+		},
+		{
+			"type": "search",
+			"downloadDir": "everything.",
+			"url": "https://example.com",
+			"search": [],
+			"exclude": [],
+			"minsize": null,
+			"ratio": null,
+			"minscore": null,
+			"excludeFileTypes": []
+		}
+	],
+	"globalBlacklist": ["what", "eww", "gross"],
+	"rootDir": "."
+}
