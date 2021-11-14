@@ -1,9 +1,9 @@
 import time
 import json
-import urllib
-from urllib import request
+import requests
 import os
 from os.path import exists
+from concurrent.futures import ThreadPoolExecutor
 
 class Set:
     def __init__(self, cfg, gcfg, opts):
@@ -88,10 +88,11 @@ class Set:
         if self.last_id is not None:
             page = f'&page=b{self.last_id}'
 
-        req = urllib.request.Request(self.req_string + page, headers={'user-agent': 'Booru-BG/0.0.1'})
-        with urllib.request.urlopen(req) as response:
-            content = response.read()
-            return json.loads(content)["posts"]
+        response = self.session.get(self.req_string + page)
+        if response.status_code == 200:
+            return json.loads(response.content)["posts"]
+        else:
+            exit(response)
 
     # Perform criteria checking on an individual post
     def verify_post(self, p) -> bool:
@@ -135,39 +136,32 @@ class Set:
     # Download the post. Returns false if already exists.
     def download_post(self, p) -> bool:
         if not exists(f"{self.download_dir}/{p['id']}.{p['file']['ext']}"):
-            urllib.request.urlretrieve(p['file']['url'].replace('https://', 'http://'), f"{self.download_dir}/{p['id']}.{p['file']['ext']}")
+            response = self.session.get(p['file']['url'])
+            open(f"{self.download_dir}/{p['id']}.{p['file']['ext']}", 'wb').write(response.content)
+            self.totaldownloads += 1
             return True
         else:
+            self.totalskipped += 1
             return False
 
     # Begins downloading.
     def run(self) -> None:
         self.totaldownloads = 0
         self.totalskipped = 0
-
         if self.type != 'search':
             return
 
         postcount = -1
-        
-        # Once no posts are returned in a query, we will stop looping
+        self.session = requests.Session()
+        self.session.headers.update({'user-agent': 'Booru-BG/0.0.1'})
         while postcount != 0:
-            posts = self.get_posts()
+            raw_posts = self.get_posts()
+            posts = list(filter(lambda p: self.verify_post(p), raw_posts))
             postcount = len(posts)
-            if postcount > 0:
-                for p in posts:
-                    self.last_id = p["id"]
-                    if self.verify_post(p) is True:
-                        if self.download_post(p):
-                            if self.opts['debug'] is True:
-                                print(f"\r{p['id']} rated {p['score']['total']}: {p['file']['url']}")
-                            self.totaldownloads += 1
-                        else:
-                            if self.opts['debug'] is True:
-                                print(f"{p['id']} rated {p['score']['total']}: Already Exists")
-                            self.totalskipped += 1
-                        if self.opts['debug'] is False:
-                            print(f'Downloaded {self.totaldownloads}, skipped {self.totalskipped} existing, current post ID is {self.last_id}        ', end='\r', flush=True)
-            # Delay is required for API rate limiting
+            self.last_id = posts[-1]["id"]
+            with ThreadPoolExecutor(max_workers=16) as pool:
+                pool.map(self.download_post, posts)
+                print('done now')
+            print(f'Downloaded {self.totaldownloads}, skipped {self.totalskipped} existing, current post ID is {self.last_id}        ', end='\r', flush=True)
             time.sleep(0.5)
         print()

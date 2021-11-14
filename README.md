@@ -2,7 +2,7 @@
 
 Bulk-download images from popular booru sites. Filter by tags, blacklist, size, ratio, score, and filetype. Create multiple search queries that each download into their own folders.
 ## Requirements
-Uses the urllib module, so you may need to run `pip install urllib`.
+Requires Python 3.
 
 ## config.json
 You must create a config.json file in the project's root directory. See example.json for a typical use-case or follow along below for specifics.
