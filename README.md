@@ -1,6 +1,8 @@
 # booru-bg
 
 Bulk-download images from popular booru sites. Filter by tags, blacklist, size, ratio, score, and filetype. Create multiple search queries that each download into their own folders.
+## Requirements
+Uses the urllib module, so you may need to run `pip install urllib`.
 
 ## How to Use
 1. Create a config.json in the project's root directory. 
