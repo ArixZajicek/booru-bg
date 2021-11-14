@@ -19,12 +19,14 @@ while i < len(sys.argv):
         c = sys.argv[i][1]
         if c == 'd' or c == 'v':
             opts['debug'] = True
+            i = i + 1
         else:
             exit(f'Unknown command line option {sys.argv[i]}')
     else:
         opts['customconfigs'] = True
         configs.append(sys.argv[i])
-    pass
+        i = i + 1
+    
 
 if opts['customconfigs'] is False:
     configs = ['config.json']
