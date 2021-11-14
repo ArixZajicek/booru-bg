@@ -1,4 +1,16 @@
 {
+	"globalCfg": {
+		"blacklist": ["what", "eww", "gross"],
+		"rootDir": "./downloads",
+		"defaults" : {
+			"type": "search",
+			"url": "https://example.com",
+			"minsize": null,
+			"ratio": null,
+			"minscore": null,
+			"excludeFileTypes": ["swf"]
+		}
+	},
 	"sets": [
 		{
 			"type": "search",
@@ -13,18 +25,8 @@
 			"ignoreBlacklist": false
 		},
 		{
-			"type": "search",
 			"downloadDir": "everything.",
-			"url": "https://example.com",
-			"search": [],
-			"exclude": [],
-			"minsize": null,
-			"ratio": null,
-			"minscore": null,
-			"excludeFileTypes": [],
 			"ignoreBlacklist": true
 		}
-	],
-	"globalBlacklist": ["what", "eww", "gross"],
-	"rootDir": "."
+	]
 }

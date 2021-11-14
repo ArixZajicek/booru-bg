@@ -6,14 +6,31 @@ import os
 from os.path import exists
 
 class Set:
-    def __init__(self, cfg, blacklist = [], root_dir = None):
+    def __init__(self, cfg, gcfg, opts):
+        self.opts = opts
+        # Set defaults if they don't exist.
+        for prop in [   ('type', 'search'), ('downloadDir', 'downloads'), ('url', ''), \
+                        ('search', []), ('exclude', []), ('minsize', None), ('ratio', None), \
+                        ('minscore', None), ('excludeFileTypes', []), ('ignoreBlacklist', False)]:
+            if not prop[0] in cfg:
+                if 'defaults' in gcfg and prop[0] in gcfg['defaults']:
+                    cfg[prop[0]] = gcfg['defaults'][prop[0]]
+                else:
+                    cfg[prop[0]] = prop[1]
+        
+        # Now set class values
         self.last_id = None
         self.type = cfg['type']
-        self.blacklist = blacklist
+        if 'blacklist' in gcfg:
+            self.blacklist = gcfg['blacklist']
+        else:
+            self.blacklist = []
         self.download_dir = cfg['downloadDir']
         self.ignore_blacklist = cfg['ignoreBlacklist']
-        if root_dir is not None:
-            self.download_dir = root_dir + '/' + self.download_dir
+        if 'rootDir' in gcfg:
+            self.download_dir = gcfg['rootDir'] + '/' + self.download_dir
+        else:
+            self.download_dir = './' + self.download_dir
         if not exists(self.download_dir + '/'):
             os.makedirs(self.download_dir + '/')
         
@@ -118,17 +135,18 @@ class Set:
     # Download the post. Returns false if already exists.
     def download_post(self, p) -> bool:
         if not exists(f"{self.download_dir}/{p['id']}.{p['file']['ext']}"):
-            urllib.request.urlretrieve(p['file']['url'], f"{self.download_dir}/{p['id']}.{p['file']['ext']}")
+            urllib.request.urlretrieve(p['file']['url'].replace('https://', 'http://'), f"{self.download_dir}/{p['id']}.{p['file']['ext']}")
             return True
         else:
             return False
 
     # Begins downloading.
-    def run(self) -> int:
-        if self.type != 'search':
-            return
+    def run(self) -> None:
         self.totaldownloads = 0
         self.totalskipped = 0
+
+        if self.type != 'search':
+            return
 
         postcount = -1
         
@@ -142,12 +160,15 @@ class Set:
                 for p in posts:
                     if self.verify_post(p) is True:
                         if self.download_post(p):
-                            print(f"\r{p['id']} rated {p['score']['total']}: {p['file']['url']}")
+                            if self.opts['debug'] is True:
+                                print(f"\r{p['id']} rated {p['score']['total']}: {p['file']['url']}")
                             self.totaldownloads += 1
                         else:
-                            # print(f"{p['id']} rated {p['score']['total']}: Already Exists")
+                            if self.opts['debug'] is True:
+                                print(f"{p['id']} rated {p['score']['total']}: Already Exists")
                             self.totalskipped += 1
-                            pass
+                        if self.opts['debug'] is False:
+                            print(f'Downloaded {self.totaldownloads}, skipped {self.totalskipped} existing, last ID is {self.last_id}        ', end='\r', flush=True)
             # Delay is required for API rate limiting
-            time.sleep(0.5)
-        return self.totaldownloads
+            time.sleep(0.25)
+        print()
