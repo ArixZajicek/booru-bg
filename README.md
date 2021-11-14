@@ -41,9 +41,9 @@ config.json must include a `sets` array that contains each set that you wish to 
 
 `"ignoreBlacklist": false` - Used to ignore the global blacklist. Useful in situations where you want to download a pool and don't want to skip over any sequential images that you might otherwise have blacklisted.
 
+## Running
+`python3 main.py`
+Run with no arguments to use the default file, config.txt.
 
-
-1. Create a config.json in the project's root directory. 
-	- See example.json for templating. When you don't want to filter by a value, use either `null` or `[]` where appropriate. See the second example in example.json. This would download everything with no filters applied.
-2. Run `python3 main.py`.
-3. Wait for downloads to complete.
+`python3 main.py config1.json [config2.json [...]]`
+Specify one or more config files to run instead of the default config.json.
