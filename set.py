@@ -11,6 +11,7 @@ class Set:
         self.type = cfg['type']
         self.blacklist = blacklist
         self.download_dir = cfg['downloadDir']
+        self.ignore_blacklist = cfg['ignoreBlacklist']
         if root_dir is not None:
             self.download_dir = root_dir + '/' + self.download_dir
         if not exists(self.download_dir + '/'):
@@ -106,9 +107,10 @@ class Set:
                 return False
         
         # Check global blacklist tags
-        for tag in self.blacklist:
-            if tag in ptags:
-                return False
+        if self.ignore_blacklist is False:
+            for tag in self.blacklist:
+                if tag in ptags:
+                    return False
         
         # All good!
         return True

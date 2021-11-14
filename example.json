@@ -9,7 +9,8 @@
 			"minsize": {"width": 1280, "height": 720},
 			"ratio": "16:9",
 			"minscore": 100,
-			"excludeFileTypes": ["swf", "webm", "gif"]
+			"excludeFileTypes": ["swf", "webm", "gif"],
+			"ignoreBlacklist": false
 		},
 		{
 			"type": "search",
@@ -20,7 +21,8 @@
 			"minsize": null,
 			"ratio": null,
 			"minscore": null,
-			"excludeFileTypes": []
+			"excludeFileTypes": [],
+			"ignoreBlacklist": true
 		}
 	],
 	"globalBlacklist": ["what", "eww", "gross"],
