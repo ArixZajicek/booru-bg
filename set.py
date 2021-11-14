@@ -161,7 +161,6 @@ class Set:
             self.last_id = posts[-1]["id"]
             with ThreadPoolExecutor(max_workers=16) as pool:
                 pool.map(self.download_post, posts)
-                print('done now')
             print(f'Downloaded {self.totaldownloads}, skipped {self.totalskipped} existing, current post ID is {self.last_id}        ', end='\r', flush=True)
             time.sleep(0.5)
         print()
