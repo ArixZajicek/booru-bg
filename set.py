@@ -155,9 +155,8 @@ class Set:
             posts = self.get_posts()
             postcount = len(posts)
             if postcount > 0:
-                self.last_id = posts[postcount - 1]["id"]
-
                 for p in posts:
+                    self.last_id = p["id"]
                     if self.verify_post(p) is True:
                         if self.download_post(p):
                             if self.opts['debug'] is True:
@@ -168,7 +167,7 @@ class Set:
                                 print(f"{p['id']} rated {p['score']['total']}: Already Exists")
                             self.totalskipped += 1
                         if self.opts['debug'] is False:
-                            print(f'Downloaded {self.totaldownloads}, skipped {self.totalskipped} existing, last ID is {self.last_id}        ', end='\r', flush=True)
+                            print(f'Downloaded {self.totaldownloads}, skipped {self.totalskipped} existing, current post ID is {self.last_id}        ', end='\r', flush=True)
             # Delay is required for API rate limiting
-            time.sleep(0.25)
+            time.sleep(0.5)
         print()
