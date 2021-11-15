@@ -14,7 +14,7 @@ def tp(str, end='\n', flush=False):
     print(f'[{time.strftime("%Y-%m-%d %H:%M:%S")}] {str}', end=end, flush=flush)
 
 if __name__ == "__main__":
-    opts = {'debug': False, 'customconfigs': False, 'username': None, 'password': None}
+    opts = {'debug': False, 'customconfigs': False}
     configs = []
 
     # Set arguments
@@ -25,23 +25,14 @@ if __name__ == "__main__":
             if c == 'd' or c == 'v':
                 opts['debug'] = True
                 i = i + 1
-            elif c == 'u' and i < len(sys.argv) - 1:
-                opts['username'] = sys.argv[i + 1]
-                i = i + 2
-            elif c == 'p' and i < len(sys.argv) - 1:
-                opts['password'] = sys.argv[i + 1]
-                i = i + 2
             else:
                 exit(f'Unknown command line option {sys.argv[i]}')
         else:
             opts['customconfigs'] = True
             configs.append(sys.argv[i])
+            if not configs[-1].lower().endswith('.json'):
+                configs[-1] += '.json'
             i = i + 1
-
-    # Prompt for password if username given but no password
-    if opts['username'] is not None and opts['password'] is None:
-        # sys.stdout.write("\033[F") # Cursor up one line
-        opts['password'] = input(f'Please enter the password for user {opts["username"]}: ')
 
     if opts['customconfigs'] is False:
         configs = ['config.json']

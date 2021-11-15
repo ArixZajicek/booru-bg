@@ -3,6 +3,7 @@
 		"blacklist": ["what", "eww", "gross"],
 		"rootDir": "./downloads",
 		"defaults" : {
+			"auth": {"username": "username", "password": "password or API key (site dependent)"},
 			"type": "search",
 			"url": "https://example.com",
 			"minsize": null,

@@ -27,6 +27,8 @@ config.json must include a `sets` array that contains each set that you wish to 
 
 `"url": **No Default**` - Base URL, must be listed in the set or in defaults.
 
+`"auth": None` - HTTP Basic Auth credentials. Can either be `None` or `{"username": "your username here", "password": "your password or API token here"}`. While this script does not modify your account in any way, some sites may require an authenticated user to view some content. Additionally, some sites require you to enable API access and use an API token as your password instead of your regular one. Check in your account settings for more info.
+
 `"search": []` - Search tags - all posts must include these tags.
 
 `"exclude": []` - Exclude tags, all posts must not include these tags. Note, this does not override the `blacklist` parameter but rather works in conjunction with it if `ignoreBlacklist` is not `true`.
@@ -41,6 +43,8 @@ config.json must include a `sets` array that contains each set that you wish to 
 
 `"ignoreBlacklist": false` - Used to ignore the global blacklist. Useful in situations where you want to download a pool and don't want to skip over any sequential images that you might otherwise have blacklisted.
 
+`"stopEarly": false` - Used to stop immediately when an existing post is found. The default is a thorough search to make sure every file in the search is downloaded, but if you only care about the most recent ones, you can set this to true to stop searching as soon as you reach a post you've already downloaded.
+
 ## Running
 `python3 main.py [options]`
 Run with no arguments to use the default file, config.txt.
@@ -49,8 +53,4 @@ Run with no arguments to use the default file, config.txt.
 Specify one or more config files to run instead of the default config.json.
 
 ### Options
-`-u username` - Username used for auth. If `-p` is not provided, you will be prompted for a password.
-
-`-p password` - Password used for auth. If `-u` is provided without `-p`, you will be prompted for a password.
-
 `-d or -v` - Debug output, not currently used.

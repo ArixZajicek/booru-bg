@@ -9,8 +9,8 @@ class Set:
     def __init__(self, cfg, gcfg, opts):
         self.opts = opts
         # Set defaults if they don't exist.
-        for prop in [   ('type', 'search'), ('downloadDir', 'downloads'), ('url', ''), \
-                        ('search', []), ('exclude', []), ('minsize', None), ('ratio', None), \
+        for prop in [   ('type', 'search'), ('downloadDir', 'downloads'), ('url', ''), ('auth', None), \
+                        ('search', []), ('exclude', []), ('minsize', None), ('ratio', None), ('stopEarly', False), \
                         ('minscore', None), ('excludeFileTypes', []), ('ignoreBlacklist', False)]:
             if not prop[0] in cfg:
                 if 'defaults' in gcfg and prop[0] in gcfg['defaults']:
@@ -21,6 +21,7 @@ class Set:
         # Now set class values
         self.last_id = None
         self.last_api_call = 0
+        self.auth = cfg['auth']
         self.type = cfg['type']
         if 'blacklist' in gcfg:
             self.blacklist = gcfg['blacklist']
@@ -28,6 +29,8 @@ class Set:
             self.blacklist = []
         self.download_dir = cfg['downloadDir']
         self.ignore_blacklist = cfg['ignoreBlacklist']
+        self.stop_early = cfg['stopEarly']
+        self.dup_found = False
         if 'rootDir' in gcfg:
             self.download_dir = gcfg['rootDir'] + '/' + self.download_dir
         else:
@@ -35,25 +38,24 @@ class Set:
         if not exists(self.download_dir + '/'):
             os.makedirs(self.download_dir + '/')
         
-        if self.type == 'search':
-            self.tags_excluded = cfg['exclude']
-            self.bad_filetypes = cfg['excludeFileTypes']
-            if cfg['ratio'] is not None:
-                if cfg['ratio'].count(':') == 1:
-                    temp = cfg['ratio'].split(':', 1)
-                    self.ratio = float(temp[0]) / float(temp[1])
-                elif cfg['ratio'].count('/') == 1:
-                    temp = cfg['ratio'].split('/', 1)
-                    self.ratio = float(temp[0]) / float(temp[1])
-                else:
-                    try:
-                        self.ratio = float(cfg['ratio'])
-                    except ValueError:
-                        self.ratio = None
+        self.tags_excluded = cfg['exclude']
+        self.bad_filetypes = cfg['excludeFileTypes']
+        if cfg['ratio'] is not None:
+            if cfg['ratio'].count(':') == 1:
+                temp = cfg['ratio'].split(':', 1)
+                self.ratio = float(temp[0]) / float(temp[1])
+            elif cfg['ratio'].count('/') == 1:
+                temp = cfg['ratio'].split('/', 1)
+                self.ratio = float(temp[0]) / float(temp[1])
             else:
-                self.ratio = None
-            
-            self.make_query(cfg['url'], (cfg['minsize']['width'], cfg['minsize']['height']) if cfg['minsize'] is not None else None, cfg['minscore'], cfg['search'])
+                try:
+                    self.ratio = float(cfg['ratio'])
+                except ValueError:
+                    self.ratio = None
+        else:
+            self.ratio = None
+        
+        self.make_query(cfg['url'], (cfg['minsize']['width'], cfg['minsize']['height']) if cfg['minsize'] is not None else None, cfg['minscore'], cfg['search'])
             
             
     
@@ -66,6 +68,9 @@ class Set:
             count = 2
         if minscore is not None:
             tags = f'{tags} score:>={minscore}'
+            count += 1
+        if self.ratio is not None:
+            tags = f'{tags} ratio:{round(self.ratio, 2)}'
             count += 1
 
         # Now add as many search tags as possible, up to 6.
@@ -101,20 +106,16 @@ class Set:
         if response.status_code == 200:
             return json.loads(response.content)["posts"]
         else:
-            exit(f'Error!\nResponse:\n{response.text}\nCurrent Headers:\n{self.session.headers}\n\n{self.session.auth}')
+            exit(f'\nError!\nResponse ({response.status_code}):\n{response.text}')
 
     # Perform criteria checking on an individual post
     def verify_post(self, p) -> bool:
-        # Check that URL exists (not deleted/taken down)
+        # Check that URL exists (not deleted/taken down/hidden)
         if not type(p['file']['url']) is str:
             return False
         
-        # Verify file type is not flash, and not a video if not allowed
+        # Verify file type is allowed
         if p['file']['ext'] in self.bad_filetypes:
-            return False
-
-        # Verify aspect ratio
-        if self.ratio is not None and abs(p['file']['width'] / p['file']['height'] - self.ratio) >= 0.01:
             return False
 
         # flatten post tags
@@ -150,8 +151,9 @@ class Set:
             self.totaldownloads += 1
         else:
             self.totalskipped += 1
+            self.dup_found = True
         if time.time() - self.last_print_time > 0.25:
-            self.tp(f'Downloaded {self.totaldownloads}, skipped {self.totalskipped} existing, current post ID is {p["id"]}        ', end='\r', flush=True)
+            self.tp(f'\rDownloaded {self.totaldownloads}, skipped {self.totalskipped} existing, current post ID is {p["id"]}        ', end='', flush=True)
             self.last_print_time = time.time()
 
 
@@ -160,15 +162,16 @@ class Set:
         self.totaldownloads = 0
         self.totalskipped = 0
         self.last_print_time = 0
+        
         if self.type != 'search':
             return
 
         postcount = -1
         self.session = requests.Session()
         self.session.headers.update({'user-agent': 'Booru-BG/0.0.1'})
-        if self.opts['username'] is not None and self.opts['password'] is not None:
-            self.session.auth = (self.opts['username'], self.opts['password'])
-        while postcount != 0:
+        if self.auth is not None:
+            self.session.auth = (self.auth['username'], self.auth['password'])
+        while postcount != 0 and not (self.stop_early and self.dup_found):
             raw_posts = self.get_posts()
             posts = list(filter(lambda p: self.verify_post(p), raw_posts))
             postcount = len(posts)
@@ -176,8 +179,10 @@ class Set:
                 self.last_id = posts[-1]["id"]
                 with ThreadPoolExecutor(max_workers=16) as pool:
                     pool.map(self.download_post, posts)
-            self.tp(f'Downloaded {self.totaldownloads}, skipped {self.totalskipped} existing, current post ID is {self.last_id}        ', end='\r', flush=True)
+            self.tp(f'\rDownloaded {self.totaldownloads}, skipped {self.totalskipped} existing, current post ID is {self.last_id}        ', end='', flush=True)
         print()
+        if (self.stop_early and self.dup_found):
+            self.tp(f'Stopped early, duplicate found.')
     
     def tp(self, str, end='\n', flush=False):
         print(f'[{time.strftime("%Y-%m-%d %H:%M:%S")}] {str}', end=end, flush=flush)
