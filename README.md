@@ -1,6 +1,6 @@
 # booru-bg
 
-Bulk-download images from popular booru sites. Filter by tags, blacklist, size, ratio, score, and filetype. Create multiple search queries that each download into their own folders.
+Bulk-download images from popular image board sites. This was designed primarily around finding wallpapers so image dimension options are included. Filter by tags, blacklist, size, ratio, score, and filetype. Create multiple search queries that each download into their own folders.
 ## Requirements
 Requires Python 3.
 
@@ -55,4 +55,4 @@ Specify one or more config files to run instead of the default config.json.
 ### Options
 `-d or -v` - Debug output, not currently used.
 
-`-P` - Purge files that no longer match into a `purged` subfolder to be deleted as desired. Note! While this application makes an attempt to only move files it could have created, there is no guarantee that it won't move other files. Namely, the best it can do is verify that the name is all numbers and the extension is recognized, but that's it. Therefore, be careful if doing this in a shared folder. Aadditionally, if multiple sets output into the same folder, weird behavior WILL occur and files that should be there will be purged. Use with caution!!
+`-P` - Purge files that no longer match into a `purged` subfolder to be deleted as desired. Note! While this application makes an attempt to only move files it could have created, there is no guarantee that it won't move other files. Namely, the best it can do is verify that the name is all numbers and the extension is recognized, but that's it. Therefore, be careful if doing this in a shared folder. Additionally, if multiple sets output into the same folder, weird behavior WILL occur and files that should be there will be purged. Use with caution!!
