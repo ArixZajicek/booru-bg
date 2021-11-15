@@ -214,7 +214,10 @@ class Set:
                 self.tp('No files were purged.')
     
     def tp(self, str, end='\n', flush=False):
-        print(f'[{time.strftime("%Y-%m-%d %H:%M:%S")}] {str}', end=end, flush=flush)
+        if str.startswith('\r'):
+            print(f'\r[{time.strftime("%Y-%m-%d %H:%M:%S")}] {str[1:]}', end=end, flush=flush)
+        else:
+            print(f'[{time.strftime("%Y-%m-%d %H:%M:%S")}] {str}', end=end, flush=flush)
 
     def dp(self, str, end='\n', flush=False):
         if self.opts['debug']:

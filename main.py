@@ -11,7 +11,10 @@ tags. See example.json for all options. """
 
 
 def tp(str, end='\n', flush=False):
-    print(f'[{time.strftime("%Y-%m-%d %H:%M:%S")}] {str}', end=end, flush=flush)
+    if str.startswith('\r'):
+        print(f'\r[{time.strftime("%Y-%m-%d %H:%M:%S")}] {str[1:]}', end=end, flush=flush)
+    else:
+        print(f'[{time.strftime("%Y-%m-%d %H:%M:%S")}] {str}', end=end, flush=flush)
 
 if __name__ == "__main__":
     opts = {'debug': False, 'customconfigs': False, 'purge': False}
