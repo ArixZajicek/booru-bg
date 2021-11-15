@@ -20,6 +20,7 @@ class Set:
         
         # Now set class values
         self.last_id = None
+        self.last_api_call = 0
         self.type = cfg['type']
         if 'blacklist' in gcfg:
             self.blacklist = gcfg['blacklist']
@@ -84,15 +85,23 @@ class Set:
 
     # Get posts with an ID lower than the last ID searched
     def get_posts(self) -> list:
+        # Follow rate-limit requirements and wait a minimum of 1 second between API calls
+        now = time.time()
+        if now - self.last_api_call < 1:
+            time.sleep(1 - (now - self.last_api_call))
+        self.last_api_call = time.time()
+
+        # Page string if needed
         page = ''
         if self.last_id is not None:
             page = f'&page=b{self.last_id}'
-
+        
+        # Use current session to get response.
         response = self.session.get(self.req_string + page)
         if response.status_code == 200:
             return json.loads(response.content)["posts"]
         else:
-            exit(response)
+            exit(f'Error!\nResponse:\n{response.text}\nCurrent Headers:\n{self.session.headers}\n\n{self.session.auth}')
 
     # Perform criteria checking on an individual post
     def verify_post(self, p) -> bool:
@@ -134,33 +143,45 @@ class Set:
         return True
 
     # Download the post. Returns false if already exists.
-    def download_post(self, p) -> bool:
+    def download_post(self, p) -> None:
         if not exists(f"{self.download_dir}/{p['id']}.{p['file']['ext']}"):
             response = self.session.get(p['file']['url'])
             open(f"{self.download_dir}/{p['id']}.{p['file']['ext']}", 'wb').write(response.content)
             self.totaldownloads += 1
-            return True
         else:
             self.totalskipped += 1
-            return False
+        if time.time() - self.last_print_time > 0.25:
+            self.tp(f'Downloaded {self.totaldownloads}, skipped {self.totalskipped} existing, current post ID is {p["id"]}        ', end='\r', flush=True)
+            self.last_print_time = time.time()
+
 
     # Begins downloading.
     def run(self) -> None:
         self.totaldownloads = 0
         self.totalskipped = 0
+        self.last_print_time = 0
         if self.type != 'search':
             return
 
         postcount = -1
         self.session = requests.Session()
         self.session.headers.update({'user-agent': 'Booru-BG/0.0.1'})
+        if self.opts['username'] is not None and self.opts['password'] is not None:
+            self.session.auth = (self.opts['username'], self.opts['password'])
         while postcount != 0:
             raw_posts = self.get_posts()
             posts = list(filter(lambda p: self.verify_post(p), raw_posts))
             postcount = len(posts)
-            self.last_id = posts[-1]["id"]
-            with ThreadPoolExecutor(max_workers=16) as pool:
-                pool.map(self.download_post, posts)
-            print(f'Downloaded {self.totaldownloads}, skipped {self.totalskipped} existing, current post ID is {self.last_id}        ', end='\r', flush=True)
-            time.sleep(0.5)
+            if postcount > 0:
+                self.last_id = posts[-1]["id"]
+                with ThreadPoolExecutor(max_workers=16) as pool:
+                    pool.map(self.download_post, posts)
+            self.tp(f'Downloaded {self.totaldownloads}, skipped {self.totalskipped} existing, current post ID is {self.last_id}        ', end='\r', flush=True)
         print()
+    
+    def tp(self, str, end='\n', flush=False):
+        print(f'[{time.strftime("%Y-%m-%d %H:%M:%S")}] {str}', end=end, flush=flush)
+
+    def dp(self, str, end='\n', flush=False):
+        if self.opts['debug']:
+            self.tp(str, end, flush)
