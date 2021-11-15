@@ -14,7 +14,7 @@ def tp(str, end='\n', flush=False):
     print(f'[{time.strftime("%Y-%m-%d %H:%M:%S")}] {str}', end=end, flush=flush)
 
 if __name__ == "__main__":
-    opts = {'debug': False, 'customconfigs': False}
+    opts = {'debug': False, 'customconfigs': False, 'purge': False}
     configs = []
 
     # Set arguments
@@ -24,6 +24,9 @@ if __name__ == "__main__":
             c = sys.argv[i][1]
             if c == 'd' or c == 'v':
                 opts['debug'] = True
+                i = i + 1
+            elif c == 'P':
+                opts['purge'] = True
                 i = i + 1
             else:
                 exit(f'Unknown command line option {sys.argv[i]}')

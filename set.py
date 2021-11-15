@@ -1,3 +1,4 @@
+from posixpath import split
 import time
 import json
 import requests
@@ -23,6 +24,10 @@ class Set:
         self.last_api_call = 0
         self.auth = cfg['auth']
         self.type = cfg['type']
+        if 'simultaneousDownloads' in gcfg:
+            self.dlworkers = gcfg['simultaneousDownloads']
+        else:
+            self.dlworkers = 12
         if 'blacklist' in gcfg:
             self.blacklist = gcfg['blacklist']
         else:
@@ -37,7 +42,14 @@ class Set:
             self.download_dir = './' + self.download_dir
         if not exists(self.download_dir + '/'):
             os.makedirs(self.download_dir + '/')
-        
+        elif self.opts['purge']:
+            self.stop_early = False
+            def file_is_ours(file: str):
+                if file.count('.') != 1: return False
+                name, ext = file.split('.')
+                return name.isnumeric() and ext in ['png', 'jpeg', 'jpg', 'gif', 'webm', 'swf']
+            self.files_to_purge = list(filter(file_is_ours, os.listdir(self.download_dir)))
+
         self.tags_excluded = cfg['exclude']
         self.bad_filetypes = cfg['excludeFileTypes']
         if cfg['ratio'] is not None:
@@ -174,15 +186,32 @@ class Set:
         while postcount != 0 and not (self.stop_early and self.dup_found):
             raw_posts = self.get_posts()
             posts = list(filter(lambda p: self.verify_post(p), raw_posts))
+            
+            if self.opts['purge']:
+                for p in posts:
+                    fname = f"{p['id']}.{p['file']['ext']}"
+                    if fname in self.files_to_purge:
+                        self.files_to_purge.remove(fname)
+
             postcount = len(posts)
             if postcount > 0:
                 self.last_id = posts[-1]["id"]
-                with ThreadPoolExecutor(max_workers=16) as pool:
+                with ThreadPoolExecutor(max_workers=8) as pool:
                     pool.map(self.download_post, posts)
             self.tp(f'\rDownloaded {self.totaldownloads}, skipped {self.totalskipped} existing, current post ID is {self.last_id}        ', end='', flush=True)
         print()
         if (self.stop_early and self.dup_found):
             self.tp(f'Stopped early, duplicate found.')
+        
+        if self.opts['purge']:
+            if len(self.files_to_purge) > 0:
+                if not exists(self.download_dir + '/purged/'):
+                    os.makedirs(self.download_dir + '/purged/')
+                for file in self.files_to_purge:
+                    os.rename(self.download_dir + '/' + file, self.download_dir + '/purged/' + file)
+                self.tp(f'Purged {len(self.files_to_purge)} file{"s" if len(self.files_to_purge) != 1 else ""}.')
+            else:
+                self.tp('No files were purged.')
     
     def tp(self, str, end='\n', flush=False):
         print(f'[{time.strftime("%Y-%m-%d %H:%M:%S")}] {str}', end=end, flush=flush)
