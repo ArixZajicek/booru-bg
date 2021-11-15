@@ -16,6 +16,8 @@ Typically, config.json would include a `globalCfg` object with a `blacklist` arr
 
 `"rootDir": "."` is just the base directory prepended to all sets' download directories.
 
+`"simultaneousDownloads": 8` - The maximum number of concurrent downloads. Increase this if you have a fast PC and internet, decrease on limited devices or bandwidth.
+
 `"defaults": {...}` - The default parameters for all sets, to be used when omitted from each set below. Will use built-in parameters if there is no value here or in a set.
 
 ### Sets

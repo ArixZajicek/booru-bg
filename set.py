@@ -27,7 +27,7 @@ class Set:
         if 'simultaneousDownloads' in gcfg:
             self.dlworkers = gcfg['simultaneousDownloads']
         else:
-            self.dlworkers = 12
+            self.dlworkers = 8
         if 'blacklist' in gcfg:
             self.blacklist = gcfg['blacklist']
         else:
