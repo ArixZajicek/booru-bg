@@ -42,8 +42,15 @@ config.json must include a `sets` array that contains each set that you wish to 
 `"ignoreBlacklist": false` - Used to ignore the global blacklist. Useful in situations where you want to download a pool and don't want to skip over any sequential images that you might otherwise have blacklisted.
 
 ## Running
-`python3 main.py`
+`python3 main.py [options]`
 Run with no arguments to use the default file, config.txt.
 
-`python3 main.py config1.json [config2.json [...]]`
+`python3 main.py [options] config1.json [config2.json [...]]`
 Specify one or more config files to run instead of the default config.json.
+
+### Options
+`-u username` - Username used for auth. If `-p` is not provided, you will be prompted for a password.
+
+`-p password` - Password used for auth. If `-u` is provided without `-p`, you will be prompted for a password.
+
+`-d or -v` - Debug output, not currently used.
