@@ -1,3 +1,4 @@
 config.json
-__pycache__/
-_*.json
+*.json
+^example.json
+*/
