@@ -1,8 +1,8 @@
 # booru-bg
-
 Bulk-download images from popular image board sites. This was designed primarily around finding wallpapers so image dimension options are included. Filter by tags, blacklist, size, ratio, score, and filetype. Create multiple search queries that each download into their own folders.
+
 ## Requirements
-Requires Python 3.
+Requires Python 3 and the `requests` module.
 
 ## config.json
 You must create a config.json file in the project's root directory. See example.json for a typical use-case or follow along below for specifics.
@@ -53,7 +53,7 @@ config.json must include a `sets` array that contains each set that you wish to 
 
 ## Running
 `python3 main.py [options]`
-Run with no arguments to use the default file, config.txt.
+Run with no arguments to use the default file, config.json.
 
 `python3 main.py [options] config1.json [config2.json [...]]`
 Specify one or more config files to run instead of the default config.json.
