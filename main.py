@@ -1,7 +1,10 @@
-from set import Set
+from copy import deepcopy
+from set import Set, tp
+from cfgtypes import *
 import json
 import sys
 import time
+
 
 """ The purpose of this code is to query an image board for all images of a
 certain size or larger, and a certain aspect ratio. A couple tags may
@@ -9,50 +12,29 @@ be searched for in addition, then this script further sorts through,
 excluding blacklisted tags and posts that do not contain other required
 tags. See example.json for all options. """
 
-
-def tp(str, end='\n', flush=False):
-    if str.startswith('\r'):
-        print(f'\r[{time.strftime("%Y-%m-%d %H:%M:%S")}] {str[1:]}', end=end, flush=flush)
-    else:
-        print(f'[{time.strftime("%Y-%m-%d %H:%M:%S")}] {str}', end=end, flush=flush)
-
 if __name__ == "__main__":
-    opts = {'debug': False, 'customconfigs': False, 'purge': False}
-    configs = []
+    # Parse command line options
+    cmdopts = CommandOptions(sys.argv)
 
-    # Set arguments
-    i = 1
-    while i < len(sys.argv):
-        if (sys.argv[i].startswith('-')):
-            c = sys.argv[i][1]
-            if c == 'd' or c == 'v':
-                opts['debug'] = True
-                i = i + 1
-            elif c == 'P':
-                opts['purge'] = True
-                i = i + 1
-            else:
-                exit(f'Unknown command line option {sys.argv[i]}')
-        else:
-            opts['customconfigs'] = True
-            configs.append(sys.argv[i])
-            if not configs[-1].lower().endswith('.json'):
-                configs[-1] += '.json'
-            i = i + 1
-
-    if opts['customconfigs'] is False:
-        configs = ['config.json']
-
-    # Open file
-    for path in configs:
+    # Open config JSON files one by one
+    for path in cmdopts.configs:
+        # Load file content into json object
         f = open(path, 'r')
-        content = f.read()
+        json_cfg = json.loads(f.read())
         f.close()
-        cfg = json.loads(content)
         tp(f'Loaded config file {path}')
-        for setcfg in cfg['sets']:
-            tp(f"Starting set {setcfg['downloadDir']}")
-            set = Set(setcfg, cfg['globalCfg'] if 'globalCfg' in cfg else {}, opts)
+
+        # Parse global config first
+        gcfg = GlobalConfig(json_cfg['globalCfg'])
+        gcfg.defaults.moveNonmatching = (gcfg.defaults.moveNonmatching or cmdopts.purge)
+
+        for json_setcfg in json_cfg['sets']:
+            # Now load set config and add values, if any.
+            setcfg = deepcopy(gcfg.defaults)
+            setcfg.addValues(json_setcfg)
+
+            tp(f"Starting set {setcfg.downloadDir}")
+            set = Set(setcfg, gcfg)
             try:
                 set.run()
             except KeyboardInterrupt:

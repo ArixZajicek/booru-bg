@@ -2,32 +2,32 @@
 	"globalCfg": {
 		"blacklist": ["what", "eww", "gross"],
 		"rootDir": "./downloads",
+		"simultaneousDownloads": 12,
 		"defaults" : {
-			"auth": {"username": "username", "password": "password or API key (site dependent)"},
 			"type": "search",
 			"url": "https://example.com",
-			"minsize": null,
-			"ratio": null,
-			"minscore": null,
-			"excludeFileTypes": ["swf"]
+			"auth": {
+				"username": "username",
+				"password": "password or API key (site dependent)"
+			},
+			"minsize": {
+				"width": 1280,
+				"height": 720
+			},
+			"ratio": "16:9",
+			"minscore": 25,
+			"excludeFileTypes": ["swf"],
+			"ignoreBlacklist": false,
+			"stopEarly": false,
+			"moveNonmatching": false,
+			"deleteNonmatching": false
 		}
 	},
 	"sets": [
 		{
-			"type": "search",
 			"downloadDir": "cool nintendo wallpapers",
-			"url": "https://example.com",
-			"search": ["solo", "nintendo"],
-			"exclude": ["pokemon"],
-			"minsize": {"width": 1280, "height": 720},
-			"ratio": "16:9",
-			"minscore": 100,
-			"excludeFileTypes": ["swf", "webm", "gif"],
-			"ignoreBlacklist": false
-		},
-		{
-			"downloadDir": "everything.",
-			"ignoreBlacklist": true
+			"search": ["nintendo"],
+			"exclude": ["sonic_the_hedgehog"]
 		}
 	]
 }
