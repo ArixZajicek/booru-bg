@@ -223,7 +223,7 @@ class Set:
 				for file in self.nonmatchingFiles:
 					os.remove(self.dir + '/' + file)
 					prog += 1
-					tp(f'\Deleted {prog} of {len(self.nonmatchingFiles)}.', end='', flush=True)
+					tp(f'\rDeleted {prog} of {len(self.nonmatchingFiles)}.', end='', flush=True)
 
 def tp(str, end='\n', flush=False):
 	if str.startswith('\r'):
