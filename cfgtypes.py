@@ -1,7 +1,3 @@
-
-import json
-
-
 class CommandOptions:
 	debug: bool = False
 	""" Whether or not debug output should be generated """
@@ -31,11 +27,11 @@ class CommandOptions:
 					exit(f'Unknown command line option {args[i]}')
 			else:
 				if self.useCustomConfigs is False:
-					configs = []
+					self.configs = []
 					self.useCustomConfigs = True
-				configs.append(args[i])
-				if not configs[-1].lower().endswith('.json'):
-					configs[-1] += '.json'
+				self.configs.append(args[i])
+				if not self.configs[-1].lower().endswith('.json'):
+					self.configs[-1] += '.json'
 				i = i + 1
 
 class SiteAuthentication:
