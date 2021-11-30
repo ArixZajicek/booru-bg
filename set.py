@@ -164,8 +164,8 @@ class Set:
         else:
             self.totalskipped += 1
             self.dup_found = True
-        if time.time() - self.last_print_time > 0.25:
-            self.tp(f'\rDownloaded {self.totaldownloads}, skipped {self.totalskipped} existing, current post ID is {p["id"]}        ', end='', flush=True)
+        if time.time() - self.last_print_time > 0.5:
+            self.tp(f'\rD{self.totaldownloads}/S{self.totalskipped}/@{p["id"]}   ', end='', flush=True)
             self.last_print_time = time.time()
 
 
@@ -198,17 +198,21 @@ class Set:
                 self.last_id = posts[-1]["id"]
                 with ThreadPoolExecutor(max_workers=8) as pool:
                     pool.map(self.download_post, posts)
-            self.tp(f'\rDownloaded {self.totaldownloads}, skipped {self.totalskipped} existing, current post ID is {self.last_id}        ', end='', flush=True)
+            
         print()
         if (self.stop_early and self.dup_found):
             self.tp(f'Stopped early, duplicate found.')
         
         if self.opts['purge']:
             if len(self.files_to_purge) > 0:
+                self.tp(f"Beginning purge of {len(self.files_to_purge)} nonmatching files...")
                 if not exists(self.download_dir + '/purged/'):
                     os.makedirs(self.download_dir + '/purged/')
+                prog = 0
                 for file in self.files_to_purge:
                     os.rename(self.download_dir + '/' + file, self.download_dir + '/purged/' + file)
+                    prog += 1
+                    self.tp(f'\rPurged {prog} of {len(self.files_to_purge)}.', end='', flush=True)
                 self.tp(f'Purged {len(self.files_to_purge)} file{"s" if len(self.files_to_purge) != 1 else ""}.')
             else:
                 self.tp('No files were purged.')
