@@ -18,10 +18,10 @@ class CommandOptions:
 			if (args[i].startswith('-')):
 				c = args[i][1]
 				if c == 'd' or c == 'v':
-					debug = True
+					self.debug = True
 					i = i + 1
 				elif c == 'P':
-					purge = True
+					self.purge = True
 					i = i + 1
 				else:
 					exit(f'Unknown command line option {args[i]}')
